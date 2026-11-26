@@ -1,0 +1,987 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Misi Gelombang Bunyi</title>
+<style>
+:root{
+  --bg:#0b1020;--panel:#131a30;--panel2:#1a2340;--line:#2a3558;--text:#e8ecf8;--mute:#9aa6c8;
+  --acc:#4fd1c5;--acc2:#f6ad55;--good:#68d391;--bad:#fc8181;
+  --S:#63b3ed;--T:#b794f4;--E:#f6ad55;--M:#68d391;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+button{font:inherit;cursor:pointer}
+input,textarea,select{font:inherit;color:var(--text);background:#0e1428;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+textarea{width:100%;min-height:80px;resize:vertical}
+input:focus,textarea:focus{outline:2px solid var(--acc);outline-offset:1px}
+h2{margin:0 0 4px;font-size:1.35rem}
+h3{margin:0 0 8px;font-size:1.05rem}
+p{margin:6px 0}
+.sub{color:var(--mute);font-size:.9rem}
+/* header */
+header{position:sticky;top:0;z-index:20;background:rgba(11,16,32,.95);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.logo{font-weight:800;font-size:1.1rem;letter-spacing:.3px}
+.logo span{color:var(--acc)}
+.hud{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-left:auto}
+.pill{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:.85rem;white-space:nowrap}
+.pill b{color:var(--acc2)}
+.xpbar{width:120px;height:8px;background:#0e1428;border-radius:9px;overflow:hidden;border:1px solid var(--line)}
+.xpbar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));width:0;transition:width .5s}
+.ibtn{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:5px 10px;font-size:.85rem}
+.ibtn:hover{border-color:var(--acc)}
+.vol{display:flex;align-items:center;gap:6px;font-size:.85rem}
+.vol input{width:80px;padding:0}
+/* layout */
+.wrap{display:grid;grid-template-columns:290px 1fr;gap:16px;padding:16px;max-width:1400px;margin:0 auto}
+aside{position:sticky;top:70px;align-self:start;display:flex;flex-direction:column;gap:12px}
+.map{display:flex;flex-direction:column;gap:8px}
+.mcard{display:flex;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px;text-align:left;color:var(--text);width:100%}
+.mcard:hover:not(:disabled){border-color:var(--acc)}
+.mcard.cur{border-color:var(--acc);box-shadow:0 0 0 2px rgba(79,209,197,.25)}
+.mcard:disabled{opacity:.45;cursor:not-allowed}
+.mnum{flex:0 0 36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:var(--panel2);border:1px solid var(--line)}
+.mcard.done .mnum{background:var(--good);color:#06210f;border-color:var(--good)}
+.mt{font-weight:700;font-size:.92rem;line-height:1.2}
+.mp{font-size:.75rem;color:var(--mute)}
+.stem{display:inline-flex;gap:3px;margin-top:3px}
+.st{font-size:.65rem;font-weight:800;border-radius:5px;padding:0 5px;color:#0b1020}
+.st.S{background:var(--S)}.st.T{background:var(--T)}.st.E{background:var(--E)}.st.M{background:var(--M)}
+.legend{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 12px;font-size:.8rem;color:var(--mute)}
+.legend div{margin:2px 0}
+main{min-width:0}
+.mhead{background:linear-gradient(135deg,#17224a,#0f1733);border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.mhead .grow{flex:1;min-width:220px}
+.timer{font-variant-numeric:tabular-nums}
+.timer.over{color:var(--bad);border-color:var(--bad)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+.card.story{background:linear-gradient(135deg,rgba(79,209,197,.12),rgba(183,148,244,.10));border-color:#2f4f6a}
+.tag{display:inline-block;font-size:.75rem;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
+blockquote{margin:8px 0;padding:10px 14px;border-left:4px solid var(--acc2);background:#0e1428;border-radius:8px;font-style:italic}
+.btn{background:var(--acc);color:#05201d;border:0;border-radius:12px;padding:10px 16px;font-weight:700}
+.btn:hover{filter:brightness(1.1)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.alt{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.btn.warn{background:var(--acc2);color:#2a1800}
+.btn.small{padding:6px 10px;font-size:.85rem;border-radius:9px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0}
+.chip{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:999px;padding:6px 14px;font-size:.9rem}
+.chip.sel{background:var(--acc);color:#05201d;border-color:var(--acc);font-weight:700}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.lab{display:grid;grid-template-columns:minmax(260px,380px) 1fr;gap:16px}
+label.l{display:block;font-weight:600;font-size:.9rem;margin:10px 0 4px}
+.q{background:#0e1428;border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0}
+.q .qt{font-weight:600;margin-bottom:6px}
+.opt{display:block;width:100%;text-align:left;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:8px 12px;margin:6px 0}
+.opt:hover{border-color:var(--acc)}
+.opt.right{background:rgba(104,211,145,.18);border-color:var(--good)}
+.opt.wrong{background:rgba(252,129,129,.15);border-color:var(--bad)}
+.fb{font-size:.9rem;margin-top:6px;min-height:1.2em}
+.fb.good{color:var(--good)}.fb.bad{color:var(--bad)}.fb.info{color:var(--acc2)}
+canvas{display:block;width:100%;background:#070b18;border:1px solid var(--line);border-radius:12px}
+#tube{touch-action:none;cursor:ns-resize}
+.formula{font-family:"Cambria Math",Cambria,Georgia,serif;font-size:1.15rem;background:#0e1428;border:1px dashed var(--line);border-radius:10px;padding:8px 14px;display:inline-block;margin:6px 0}
+table{width:100%;border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:center}
+th{color:var(--mute);font-weight:600;font-size:.8rem}
+td input{width:90px;text-align:center;padding:5px}
+.tablewrap{overflow-x:auto}
+.ok{color:var(--good);font-weight:700}.no{color:var(--bad)}
+.big{font-size:2rem;font-weight:800;font-variant-numeric:tabular-nums}
+.readouts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}
+.ro{background:#0e1428;border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.ro .k{font-size:.72rem;color:var(--mute);text-transform:uppercase;letter-spacing:.5px}
+.ro .v{font-size:1.25rem;font-weight:800;font-variant-numeric:tabular-nums}
+.meter{height:18px;background:#0e1428;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#2b6cb0,var(--acc),var(--acc2),var(--bad))}
+.locked{position:relative;opacity:.35;pointer-events:none;filter:grayscale(.6)}
+.check{display:flex;flex-direction:column;gap:4px;margin:8px 0;font-size:.9rem}
+.check div::before{content:"○ ";color:var(--mute)}
+.check div.done::before{content:"✔ ";color:var(--good)}
+.check div.done{color:var(--good)}
+.ord{display:flex;flex-direction:column;gap:6px}
+.ord button{text-align:left;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:8px 12px}
+.ord button.used{background:rgba(104,211,145,.15);border-color:var(--good);cursor:default}
+.ord button.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:6px}
+.toast{position:fixed;right:16px;bottom:16px;z-index:50;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.toast div{background:var(--panel2);border:1px solid var(--acc);border-radius:12px;padding:8px 14px;font-size:.9rem;animation:pop .3s;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+@keyframes pop{from{transform:translateY(12px);opacity:0}}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;place-items:center;z-index:60;padding:16px}
+.modal.on{display:grid}
+.modal .box{background:var(--panel);border:2px solid var(--acc2);border-radius:20px;padding:24px;max-width:420px;text-align:center;animation:pop .35s}
+.badge{font-size:4rem;line-height:1}
+.badges{display:flex;flex-wrap:wrap;gap:6px}
+.badges span{font-size:1.4rem;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:2px 6px}
+.badges span.off{filter:grayscale(1);opacity:.25}
+.note{font-size:.85rem;color:var(--mute);border-left:3px solid var(--T);padding-left:10px;margin:8px 0}
+.report h4{margin:14px 0 4px;color:var(--acc)}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cmp>div{background:#0e1428;border:1px solid var(--line);border-radius:10px;padding:10px}
+@media (max-width:900px){
+  .wrap{grid-template-columns:minmax(0,1fr);padding:12px 16px}
+  aside{position:static;min-width:0}
+  .map{flex-direction:row;overflow-x:auto;padding-bottom:4px}
+  .mcard{min-width:200px}
+  .lab,.grid2,.cmp{grid-template-columns:minmax(0,1fr)}
+  .readouts{grid-template-columns:repeat(2,1fr)}
+  .legend{display:none}
+}
+@media print{
+  header,aside,.nav,.mhead .pill,.noprint{display:none!important}
+  body{background:#fff;color:#000}
+  .wrap{display:block;padding:0}
+  .card{border:1px solid #999;background:#fff;color:#000}
+  .report h4{color:#000}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🔊 Misi <span>Gelombang Bunyi</span></div>
+  <div class="hud">
+    <span class="pill">Level <b id="lvl">1</b> · <span id="lvlname">Calon Detektif</span></span>
+    <span class="pill"><b id="xp">0</b> XP</span>
+    <div class="xpbar"><i id="xpfill"></i></div>
+    <label class="vol">🔉<input id="vol" type="range" min="0" max="1" step="0.05" value="0.5" aria-label="Volume"></label>
+    <button class="ibtn" id="mute">🔇 Bisu</button>
+    <button class="ibtn" id="teacher">👩‍🏫 Mode Guru</button>
+    <button class="ibtn" id="reset">↺ Ulang</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <aside>
+    <div class="map" id="map"></div>
+    <div class="legend">
+      <div><b style="color:var(--text)">Tahapan STEM</b></div>
+      <div><span class="st S">S</span> Science – fenomena &amp; konsep</div>
+      <div><span class="st T">T</span> Technology – ponsel sebagai alat ukur</div>
+      <div><span class="st E">E</span> Engineering – merancang &amp; menguji</div>
+      <div><span class="st M">M</span> Mathematics – data, rumus, grafik</div>
+      <div style="margin-top:8px"><b style="color:var(--text)">Lencana</b></div>
+      <div class="badges" id="badges"></div>
+      <div style="margin-top:8px"><b style="color:var(--text)">Aturan LKPD</b></div>
+      <div>• Nada &amp; volume sesuai LKPD (volume sedang)</div>
+      <div>• Ponsel dibuka hanya saat tugas</div>
+      <div>• Peran bergilir: operator, pengukur, pencatat, penyaji</div>
+    </div>
+  </aside>
+  <main id="stage"></main>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="modal" id="modal"><div class="box" id="mbox"></div></div>
+
+<script>
+"use strict";
+/* ================= KONSTANTA FISIKA ================= */
+const V = 343;          // cepat rambat bunyi di udara 20 °C (m/s)
+const ECORR = 0.6;      // koreksi ujung pipa (cm), jari-jari pipa ±1 cm
+const FREQS = [800, 1000, 1200];
+const lamCm = f => V / f * 100;
+const Lres = (f, n) => (2 * n - 1) * lamCm(f) / 4 - ECORR;
+function reso(f, L) { let a = 0; for (let n = 1; n <= 5; n++) { const d = (L - Lres(f, n)) / 0.45; a = Math.max(a, 1 / (1 + d * d)); } return a; }
+function nearestN(f, L) { let best = 1, bd = 1e9; for (let n = 1; n <= 5; n++) { const d = Math.abs(L - Lres(f, n)); if (d < bd) { bd = d; best = n; } } return best; }
+
+/* ================= UTIL ================= */
+const $ = s => document.querySelector(s);
+const fmt = (x, d = 1) => (x == null || isNaN(x)) ? '–' : Number(x).toFixed(d).replace('.', ',');
+const num = s => parseFloat(String(s).trim().replace(',', '.'));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+/* ================= STATE ================= */
+const KEY = 'misiGelombangBunyi_v1';
+const blank = () => ({
+  xp: 0, done: {}, aw: {}, ans: {}, cur: 1, teacher: false,
+  group: { name: '', r: ['', '', '', ''] },
+  pred: { text: '', lam: '', v: '', dop: '' },
+  m2: { played: {} },
+  m3: { order: false, data: { 800: {}, 1000: {}, 1200: {} } },
+  m4: { calc: { 800: {}, 1000: {}, 1200: {} }, ok: {} },
+  m5: { pred: '', predOk: false, last: null, fN: '', fF: '', measOk: false, still: false },
+  m6: { text: '' }
+});
+let S;
+try { const raw = JSON.parse(localStorage.getItem(KEY) || 'null'); S = raw ? Object.assign(blank(), raw) : blank(); } catch (e) { S = blank(); }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { } }
+
+/* ================= AUDIO ================= */
+let AC = null, master = null, muted = false, vol = 0.5;
+function ac() {
+  if (!AC) {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    master = AC.createGain(); master.gain.value = muted ? 0 : vol; master.connect(AC.destination);
+  }
+  if (AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function setMaster() { if (master) master.gain.setTargetAtTime(muted ? 0 : vol, AC.currentTime, 0.05); }
+class Voice {
+  constructor(type = 'sine', lp = 0) {
+    const a = ac();
+    this.o = a.createOscillator(); this.o.type = type;
+    this.g = a.createGain(); this.g.gain.value = 0;
+    if (lp) { this.f = a.createBiquadFilter(); this.f.type = 'lowpass'; this.f.frequency.value = lp; this.o.connect(this.f).connect(this.g); }
+    else this.o.connect(this.g);
+    this.g.connect(master); this.o.start();
+  }
+  set(freq, gain, tc = 0.02) { const t = AC.currentTime; this.o.frequency.setTargetAtTime(freq, t, tc); this.g.gain.setTargetAtTime(gain, t, 0.04); }
+  stop() { const t = AC.currentTime; this.g.gain.cancelScheduledValues(t); this.g.gain.setTargetAtTime(0, t, 0.03); const o = this.o; setTimeout(() => { try { o.stop(); o.disconnect(); } catch (e) { } }, 250); }
+}
+function blip(f, d = 0.12, type = 'sine', g = 0.15, when = 0) {
+  const a = ac(), t = a.currentTime + when, o = a.createOscillator(), gn = a.createGain();
+  o.type = type; o.frequency.value = f;
+  gn.gain.setValueAtTime(0.0001, t); gn.gain.linearRampToValueAtTime(g, t + 0.01); gn.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  o.connect(gn).connect(master); o.start(t); o.stop(t + d + 0.05);
+}
+const sfx = {
+  ok() { blip(880, .1); blip(1320, .16, 'sine', .12, .08); },
+  no() { blip(220, .18, 'square', .05); blip(170, .22, 'square', .045, .1); },
+  coin() { blip(988, .08, 'triangle', .12); blip(1319, .22, 'triangle', .12, .07); },
+  fanfare() { [523, 659, 784, 1047].forEach((f, i) => blip(f, .25, 'triangle', .14, i * .12)); blip(1047, .7, 'triangle', .12, .5); blip(1319, .7, 'triangle', .08, .5); },
+  tone(f, d = 1.2, g = 0.22) { blip(f, d, 'sine', g); }
+};
+
+/* ================= HUD / GAMIFIKASI ================= */
+const LEVELS = [[0, 'Calon Detektif'], [200, 'Detektif Bunyi'], [500, 'Penyelidik Gelombang'], [900, 'Ahli Resonansi'], [1300, 'Master Doppler'], [1800, 'Ilmuwan Bunyi']];
+const BADGES = ['🔮', '📱', '🎯', '📈', '🚑', '🌊', '🏆', '📜'];
+const BADGE_NAMES = ['Peramal Ilmiah', 'Teknisi Alat Ukur', 'Pemburu Resonansi', 'Pemecah Pola', 'Pengejar Doppler', 'Penjelas Muka Gelombang', 'Juara Tantangan', 'Tim Ilmuwan'];
+function hud() {
+  let li = 0; LEVELS.forEach((l, i) => { if (S.xp >= l[0]) li = i; });
+  $('#xp').textContent = S.xp; $('#lvl').textContent = li + 1; $('#lvlname').textContent = LEVELS[li][1];
+  const lo = LEVELS[li][0], hi = (LEVELS[li + 1] || [LEVELS[li][0] + 500])[0];
+  $('#xpfill').style.width = Math.min(100, (S.xp - lo) / (hi - lo) * 100) + '%';
+  $('#badges').innerHTML = BADGES.map((b, i) => `<span class="${S.done[i + 1] ? '' : 'off'}" title="${BADGE_NAMES[i]}">${b}</span>`).join('');
+  $('#teacher').style.borderColor = S.teacher ? 'var(--acc2)' : '';
+}
+function toast(msg) { const d = document.createElement('div'); d.innerHTML = msg; $('#toast').appendChild(d); setTimeout(() => d.remove(), 2600); }
+function award(key, xp, msg) { if (S.aw[key]) return; S.aw[key] = 1; S.xp += xp; save(); hud(); toast(`⭐ +${xp} XP · ${msg}`); sfx.coin(); }
+function complete(id) {
+  if (S.done[id]) return;
+  S.done[id] = 1; S.xp += 100; save(); hud(); renderMap(); refreshNav(); sfx.fanfare();
+  $('#mbox').innerHTML = `<div class="badge">${BADGES[id - 1]}</div><h2>Misi ${id} Selesai!</h2><p>Lencana <b>${BADGE_NAMES[id - 1]}</b> · +100 XP</p>
+    ${id < 8 ? `<p class="sub">Misi ${id + 1} sekarang terbuka.</p><button class="btn" onclick="closeModal();openMission(${id + 1})">Lanjut ke Misi ${id + 1} ➜</button>` : `<p>Seluruh misi tuntas. Kumpulkan laporan kelompokmu!</p><button class="btn" onclick="closeModal()">Lihat Laporan</button>`}
+    <div style="margin-top:8px"><button class="btn alt small" onclick="closeModal()">Tetap di sini</button></div>`;
+  $('#modal').classList.add('on');
+}
+function closeModal() { $('#modal').classList.remove('on'); }
+
+/* ================= MISI ================= */
+const MISSIONS = [
+  { id: 1, title: 'Pertanyaan Besar', stem: ['S'], phase: 'Refleksi · Prediksi', time: 3, render: m1 },
+  { id: 2, title: 'Kenali Alat Ukurmu', stem: ['T'], phase: 'Riset · Teknologi', time: 3, render: m2 },
+  { id: 3, title: 'Pemburu Resonansi', stem: ['E', 'T'], phase: 'Penemuan · Bagian A', time: 10, render: m3 },
+  { id: 4, title: 'Pecahkan Polanya', stem: ['M', 'S'], phase: 'Analisis Data · Bagian A', time: 5, render: m4 },
+  { id: 5, title: 'Kejar Gelombang', stem: ['S', 'T', 'M'], phase: 'Penemuan · Bagian B (Doppler)', time: 10, render: m5 },
+  { id: 6, title: 'Rahasia Muka Gelombang', stem: ['S'], phase: 'Penjelasan', time: 4, render: m6 },
+  { id: 7, title: 'Tantangan Akhir', stem: ['S', 'M'], phase: 'Penerapan · Asesmen', time: 6, render: m7 },
+  { id: 8, title: 'Laporan Kelompok', stem: ['S', 'T', 'E', 'M'], phase: 'Komunikasi · Produk', time: 3, render: m8 },
+];
+const unlocked = id => id === 1 || S.teacher || !!S.done[id - 1] || !!S.done[id];
+function stemTags(a) { return `<span class="stem">${a.map(s => `<span class="st ${s}">${s}</span>`).join('')}</span>`; }
+function renderMap() {
+  $('#map').innerHTML = MISSIONS.map(m => `<button class="mcard ${S.done[m.id] ? 'done' : ''} ${S.cur === m.id ? 'cur' : ''}" ${unlocked(m.id) ? '' : 'disabled'} onclick="openMission(${m.id})">
+    <span class="mnum">${S.done[m.id] ? '✔' : (unlocked(m.id) ? m.id : '🔒')}</span>
+    <span><div class="mt">${m.title}</div><div class="mp">${m.phase}</div>${stemTags(m.stem)}</span></button>`).join('');
+}
+
+/* cleanup & loop */
+let cleanups = [];
+const onCleanup = fn => cleanups.push(fn);
+function runCleanup() { cleanups.forEach(f => { try { f(); } catch (e) { } }); cleanups = []; }
+function loop(fn) {
+  let id, last = performance.now(), alive = true;
+  const step = now => { if (!alive) return; const dt = Math.min(0.05, (now - last) / 1000); last = now; fn(dt, now / 1000); id = requestAnimationFrame(step); };
+  id = requestAnimationFrame(step); onCleanup(() => { alive = false; cancelAnimationFrame(id); });
+}
+function canvasCtx(cv) {
+  const c = cv.getContext('2d'); let W = 0, H = 0;
+  return () => {
+    const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+    if (w !== W || h !== H) { W = w; H = h; cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, w, h); return { c, w, h };
+  };
+}
+
+/* timer */
+let timerId = null;
+function startTimer(min) {
+  clearInterval(timerId); let left = min * 60; const el = $('#timer');
+  const paint = () => { if (!el) return; const m = Math.floor(Math.abs(left) / 60), s = Math.abs(left) % 60; el.textContent = `⏱ ${left < 0 ? '+' : ''}${m}:${String(s).padStart(2, '0')}`; el.classList.toggle('over', left < 0); };
+  paint(); timerId = setInterval(() => { left--; paint(); }, 1000);
+}
+
+/* MCQ */
+const MCQ = {};
+function mcq(key, q, opts, ans, okMsg, hint, o = {}) {
+  MCQ[key] = { ans, okMsg, hint, lock: !!o.lock, xp: o.xp || 20, onAns: o.onAns };
+  return `<div class="q" data-key="${key}"><div class="qt">${q}</div>${opts.map((t, i) => `<button class="opt" data-i="${i}">${String.fromCharCode(65 + i)}. ${t}</button>`).join('')}<div class="fb"></div></div>`;
+}
+function paintQ(el) {
+  const k = el.dataset.key, Q = MCQ[k], a = S.ans[k]; if (!Q) return;
+  const fb = el.querySelector('.fb');
+  el.querySelectorAll('.opt').forEach(b => {
+    const i = +b.dataset.i; b.classList.remove('right', 'wrong');
+    if (a == null) return;
+    if (i === a) b.classList.add(i === Q.ans ? 'right' : 'wrong');
+    if (Q.lock && i === Q.ans) b.classList.add('right');
+  });
+  if (a == null) { fb.textContent = ''; fb.className = 'fb'; }
+  else if (a === Q.ans) { fb.innerHTML = '✔ ' + Q.okMsg; fb.className = 'fb good'; }
+  else { fb.innerHTML = (Q.lock ? '✘ ' + Q.okMsg : '✘ Belum tepat. ' + Q.hint); fb.className = 'fb bad'; }
+}
+function paintAllQ(root) { root.querySelectorAll('.q').forEach(paintQ); }
+document.addEventListener('click', e => {
+  const b = e.target.closest('.opt'); if (!b) return;
+  const el = b.closest('.q'), k = el.dataset.key, Q = MCQ[k]; if (!Q) return;
+  if (Q.lock && S.ans[k] != null) return;
+  if (!Q.lock && S.ans[k] === Q.ans) return;
+  const i = +b.dataset.i; S.ans[k] = i; save(); paintQ(el);
+  if (i === Q.ans) { sfx.ok(); award('q_' + k, Q.lock ? Q.xp : (S.aw['w_' + k] ? Math.round(Q.xp / 2) : Q.xp), 'Jawaban tepat'); }
+  else { sfx.no(); S.aw['w_' + k] = 1; save(); }
+  Q.onAns && Q.onAns();
+});
+const qOk = k => S.ans[k] === (MCQ[k] && MCQ[k].ans);
+
+function chips(name, opts, cur) { return `<div class="chips" data-name="${name}">${opts.map(o => `<button class="chip ${String(cur) === String(o[0]) ? 'sel' : ''}" data-v="${o[0]}">${o[1]}</button>`).join('')}</div>`; }
+function bindChips(root, cb) {
+  root.querySelectorAll('.chips').forEach(g => g.addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b || b.disabled) return;
+    g.querySelectorAll('.chip').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); cb(g.dataset.name, b.dataset.v, b);
+  }));
+}
+
+/* open mission */
+function openMission(id) {
+  if (!unlocked(id)) return;
+  runCleanup(); S.cur = id; save(); renderMap();
+  const m = MISSIONS[id - 1];
+  $('#stage').innerHTML = `<div class="mhead"><div class="grow"><div class="tag">Misi ${id} dari 8 · ${m.phase}</div><h2>${m.title}</h2>${stemTags(m.stem)}</div>
+    <span class="pill timer" id="timer" title="Saran waktu dari LKPD">⏱</span></div><div id="mbody"></div>
+    <div class="nav"><button class="btn alt" ${id > 1 ? '' : 'disabled'} onclick="openMission(${id - 1})">⟵ Misi sebelumnya</button>
+    <button class="btn" id="nextBtn" onclick="openMission(${id + 1})" ${id < 8 ? '' : 'style="display:none"'}>Misi berikutnya ⟶</button></div>`;
+  m.render($('#mbody')); refreshNav(); startTimer(m.time); paintAllQ($('#stage'));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function refreshNav() { const b = $('#nextBtn'); if (b) b.disabled = !unlocked(S.cur + 1); }
+
+/* ================= MISI 1 : PREDIKSI ================= */
+function m1(root) {
+  const P = S.pred;
+  root.innerHTML = `
+  <div class="card story"><div class="tag">📡 Pesan dari Markas</div>
+    <p>Kalian adalah <b>Tim Detektif Bunyi</b>. Ada dua kasus yang harus dipecahkan hari ini:</p>
+    <p>🕵️ <b>Kasus 1:</b> Bagaimana hubungan frekuensi (f), panjang gelombang (λ), dan cepat rambat (v) bunyi?<br>
+    🚑 <b>Kasus 2:</b> Mengapa nada sirene ambulans terdengar "berubah" ketika lewat di depan kita?</p>
+    <p>Ilmuwan selalu memulai dengan <b>prediksi</b>. Tidak ada prediksi yang salah — prediksi akan diuji dengan data yang kalian ukur sendiri.</p></div>
+  <div class="card"><h3>❓ Pertanyaan Besar</h3>
+    <blockquote>“Jika frekuensi dinaikkan, apa yang terjadi pada panjang gelombang dan cepat rambat bunyi?”</blockquote>
+    <div class="grid2">
+      <div><label class="l">Panjang gelombang λ akan …</label>${chips('lam', [['naik', 'Membesar'], ['turun', 'Mengecil'], ['tetap', 'Tetap']], P.lam)}</div>
+      <div><label class="l">Cepat rambat v akan …</label>${chips('v', [['naik', 'Makin cepat'], ['turun', 'Makin lambat'], ['tetap', 'Tetap']], P.v)}</div>
+    </div>
+    <label class="l">Tulis prediksi kelompok beserta alasannya</label>
+    <textarea id="ptext" placeholder="Menurut kami, jika frekuensi dinaikkan maka … karena …">${esc(P.text)}</textarea>
+  </div>
+  <div class="card"><h3>🚶 Prediksi Kasus 2</h3>
+    <p>Ponsel A berbunyi nada tetap <b>4000 Hz</b> dibawa seorang siswa berjalan cepat <b>mendekati</b> ponsel B yang merekam frekuensi. Apa yang akan terbaca di ponsel B?</p>
+    ${chips('dop', [['naik', 'Frekuensi lebih tinggi dari 4000 Hz'], ['keras', 'Hanya makin keras, frekuensi tetap'], ['turun', 'Frekuensi lebih rendah dari 4000 Hz'], ['tetap', 'Tidak ada yang berubah']], P.dop)}
+  </div>
+  <div class="card"><div class="row"><button class="btn" id="lockP">🔒 Kunci Prediksi</button><span class="fb" id="pfb"></span></div>
+    <p class="note">Prediksi yang dikunci akan dibandingkan dengan hasil pengukuranmu di Misi 4, 5, dan laporan akhir.</p></div>`;
+  bindChips(root, (n, v) => { P[n] = v; save(); });
+  $('#ptext').addEventListener('input', e => { P.text = e.target.value; save(); });
+  $('#lockP').onclick = () => {
+    const fb = $('#pfb');
+    if (!P.lam || !P.v || !P.dop) { fb.textContent = 'Pilih semua prediksi dulu.'; fb.className = 'fb bad'; sfx.no(); return; }
+    if ((P.text || '').trim().length < 15) { fb.textContent = 'Tuliskan alasan prediksimu (minimal satu kalimat).'; fb.className = 'fb bad'; sfx.no(); return; }
+    fb.textContent = 'Prediksi tersimpan! Saatnya menguji.'; fb.className = 'fb good';
+    award('m1', 50, 'Prediksi dikunci'); complete(1);
+  };
+}
+
+/* ================= MISI 2 : ALAT UKUR ================= */
+function m2(root) {
+  const G = S.group, D = S.m2;
+  const roles = ['📱 Operator ponsel', '📏 Pengukur kolom udara', '📝 Pencatat data', '🎤 Penyaji'];
+  root.innerHTML = `
+  <div class="card story"><div class="tag">🛠️ Briefing Teknologi</div>
+    <p>Ponsel bukan sekadar "mainan bunyi". Dengan aplikasi <b>phyphox</b>, ponsel menjadi <b>alat ukur</b>: <b>Generator Nada</b> (Tone Generator) untuk membuat bunyi dengan frekuensi tepat, <b>Spektrum Audio</b> (Audio Spectrum) untuk membaca frekuensi yang terekam, dan <b>Amplitudo Audio</b> untuk membaca kenyaringan.</p></div>
+  <div class="card"><h3>👥 Langkah 1 · Bagi peran kelompok</h3>
+    <p class="sub">Setiap anggota punya peran bermakna. Peran bergilir di Bagian B.</p>
+    <label class="l">Nama kelompok</label><input id="gname" value="${esc(G.name)}" placeholder="mis. Kelompok 3 – Tim Resonan" style="width:100%">
+    <div class="grid2">${roles.map((r, i) => `<div><label class="l">${r}</label><input data-r="${i}" value="${esc(G.r[i])}" placeholder="Nama siswa" style="width:100%"></div>`).join('')}</div>
+  </div>
+  <div class="card"><h3>🎛️ Langkah 2 · Coba Generator Nada</h3>
+    <p>Bunyikan ketiga nada dari LKPD. Perhatikan bentuk gelombang terhadap <b>waktu</b> di osiloskop.</p>
+    <div class="row">${FREQS.map(f => `<button class="btn alt" data-f="${f}">▶ ${f} Hz <span class="ok">${D.played[f] ? '✔' : ''}</span></button>`).join('')}</div>
+    <canvas id="osc" style="height:200px;margin-top:10px"></canvas>
+    <div class="readouts"><div class="ro"><div class="k">Frekuensi f</div><div class="v" id="of">–</div></div>
+      <div class="ro"><div class="k">Periode T = 1/f</div><div class="v" id="oT">–</div></div>
+      <div class="ro"><div class="k">Getaran per 5 ms</div><div class="v" id="oN">–</div></div>
+      <div class="ro"><div class="k">Volume</div><div class="v">sedang</div></div></div>
+  </div>
+  <div class="card"><h3>🧠 Langkah 3 · Cek pemahaman alat</h3>
+    ${mcq('m2a', 'Ketika frekuensi dinaikkan dari 800 Hz ke 1200 Hz, periode getaran T …', ['Makin panjang', 'Makin pendek', 'Tetap'], 1, 'Benar! T = 1/f, frekuensi tinggi berarti getaran lebih rapat dalam waktu.', 'Lihat osiloskop: pada 1200 Hz ada lebih banyak getaran dalam 5 ms.', { onAns: check })}
+    ${mcq('m2b', 'Di Bagian B nanti, fitur phyphox mana yang dipakai ponsel perekam untuk membaca frekuensi bunyi?', ['Generator Nada', 'Spektrum Audio (Audio Spectrum)', 'Stopwatch Akustik'], 1, 'Tepat! Spektrum Audio menampilkan puncak frekuensi yang terekam.', 'Generator Nada membuat bunyi, bukan membacanya.', { onAns: check })}
+    ${mcq('m2c', 'Menurut aturan LKPD, kapan ponsel boleh dibuka?', ['Kapan saja selama pelajaran', 'Hanya saat tugas pengukuran berlangsung', 'Hanya saat istirahat'], 1, 'Betul. Aturan ini menjaga fokus dan mencegah bercanda dengan nada.', 'Ingat aturan penggunaan ponsel di LKPD.', { onAns: check })}
+    <div class="check" id="ck2"></div>
+  </div>`;
+  const draw = canvasCtx($('#osc')); let curF = 0, until = 0, phase = 0;
+  root.querySelectorAll('[data-f]').forEach(b => b.onclick = () => {
+    const f = +b.dataset.f; curF = f; until = performance.now() + 1300; sfx.tone(f, 1.3, 0.2);
+    D.played[f] = 1; save(); b.querySelector('.ok').textContent = '✔';
+    $('#of').textContent = f + ' Hz'; $('#oT').textContent = fmt(1000 / f, 3) + ' ms'; $('#oN').textContent = fmt(f * 0.005, 0);
+    check();
+  });
+  $('#gname').oninput = e => { G.name = e.target.value; save(); check(); };
+  root.querySelectorAll('[data-r]').forEach(inp => inp.oninput = e => { G.r[+inp.dataset.r] = e.target.value; save(); check(); });
+  loop(dt => {
+    const { c, w, h } = draw(); phase += dt * 3;
+    c.strokeStyle = '#1e2a4a'; c.lineWidth = 1;
+    for (let i = 0; i <= 10; i++) { const x = 30 + (w - 40) * i / 10; c.beginPath(); c.moveTo(x, 10); c.lineTo(x, h - 25); c.stroke(); }
+    c.beginPath(); c.moveTo(30, h / 2 - 7); c.lineTo(w - 10, h / 2 - 7); c.stroke();
+    c.fillStyle = '#9aa6c8'; c.font = '11px system-ui'; c.textAlign = 'center';
+    for (let i = 0; i <= 10; i += 2) c.fillText(fmt(i * 0.5, 1) + ' ms', 30 + (w - 40) * i / 10, h - 8);
+    const on = performance.now() < until;
+    if (!curF) { c.fillText('Tekan salah satu tombol nada', w / 2, h / 2 - 12); return; }
+    c.strokeStyle = on ? '#4fd1c5' : '#2c7a7b'; c.lineWidth = 2.5; c.beginPath();
+    const A = (h - 50) / 2 * (on ? 0.9 : 0.5);
+    for (let x = 0; x <= w - 40; x++) { const t = x / (w - 40) * 0.005; const y = h / 2 - 7 - A * Math.sin(2 * Math.PI * curF * t + phase); x ? c.lineTo(30 + x, y) : c.moveTo(30 + x, y); }
+    c.stroke();
+  });
+  function check() {
+    const items = [
+      [!!G.name.trim() && G.r.every(x => x.trim()), 'Nama kelompok & 4 peran terisi'],
+      [FREQS.every(f => D.played[f]), 'Tiga nada LKPD sudah dicoba'],
+      [qOk('m2a') && qOk('m2b') && qOk('m2c'), 'Tiga pertanyaan alat terjawab benar']];
+    const el = $('#ck2'); if (el) el.innerHTML = items.map(i => `<div class="${i[0] ? 'done' : ''}">${i[1]}</div>`).join('');
+    if (items[0][0]) award('m2roles', 30, 'Peran kelompok dibagi');
+    if (items.every(i => i[0])) complete(2);
+  }
+  check();
+}
+
+/* ================= MISI 3 : RESONANSI ================= */
+function m3(root) {
+  const D = S.m3;
+  const STEPS = [
+    'Masukkan pipa ke tabung berisi air sampai kolom udara di atas air sangat pendek.',
+    'Atur ponsel: nada sesuai LKPD, volume sedang, letakkan tepat di atas mulut pipa.',
+    'Naikkan pipa perlahan sampai terdengar dengung PALING KERAS pertama → catat L₁.',
+    'Terus naikkan pipa sampai dengung keras KEDUA → catat L₂.',
+    'Ulangi untuk nada 800 Hz, 1000 Hz, dan 1200 Hz.'];
+  const SHOW = [3, 0, 4, 1, 2]; let picked = D.order ? 5 : 0;
+  root.innerHTML = `
+  <div class="card story"><div class="tag">🎯 Misi Lapangan · Bagian A</div>
+    <p>Sebuah pipa dicelupkan ke air. Bunyi dari ponsel masuk ke kolom udara di dalam pipa. Pada panjang kolom udara tertentu, pipa akan <b>berdengung paling keras</b> — itulah <b>resonansi</b>. Tugas kalian: temukan panjang kolom udara pada resonansi pertama (L₁) dan kedua (L₂) untuk tiga nada.</p></div>
+  <div class="card"><h3>🧩 Langkah 1 · Rancang prosedur <span class="st E">E</span></h3>
+    <p class="sub">Klik langkah-langkah berikut sesuai urutan kerja yang benar.</p>
+    <div class="ord" id="ord"></div><div class="fb" id="ordfb"></div></div>
+  <div class="card ${D.order ? '' : 'locked'}" id="labcard"><h3>🔬 Langkah 2 · Ukur resonansi <span class="st T">T</span></h3>
+    <div class="lab">
+      <div><canvas id="tube" style="height:520px"></canvas><p class="sub" style="text-align:center">Seret pipa naik/turun, atau pakai penggeser di kanan.</p></div>
+      <div>
+        <label class="l">Nada ponsel (sesuai LKPD)</label>${chips('f', FREQS.map(f => [f, f + ' Hz']), 1000)}
+        <div class="row" style="margin:8px 0"><button class="btn" id="tonebtn">🔊 Nyalakan nada</button></div>
+        <label class="l">Panjang kolom udara L</label>
+        <div class="big"><span id="Lval">5,0</span> cm</div>
+        <input type="range" id="Lsl" min="2" max="45" step="0.1" value="5" style="width:100%">
+        <div class="row" style="margin:6px 0"><button class="btn alt small" data-d="-1">−1 cm</button><button class="btn alt small" data-d="-0.1">−0,1</button><button class="btn alt small" data-d="0.1">+0,1</button><button class="btn alt small" data-d="1">+1 cm</button></div>
+        <label class="l">Level bunyi terdengar (dB)</label>
+        <div class="meter"><i id="meter"></i></div><div class="sub" id="dbv">– dB</div>
+        <div class="row" style="margin-top:10px"><button class="btn warn" id="r1">📌 Catat sebagai L₁</button><button class="btn warn" id="r2">📌 Catat sebagai L₂</button></div>
+        <div class="fb" id="rfb"></div>
+        <div class="tablewrap" style="margin-top:10px"><table><thead><tr><th>f (Hz)</th><th>L₁ (cm)</th><th>L₂ (cm)</th></tr></thead><tbody id="t3"></tbody></table></div>
+        <div class="row" style="margin-top:10px"><button class="btn alt small" id="hint">💡 Petunjuk</button>
+          <label class="sub"><input type="checkbox" id="reveal"> Tampilkan pola gelombang di dalam pipa</label></div>
+        <p class="note" id="hinttxt" style="display:none">Petunjuk: Mulailah dari kolom udara pendek lalu naikkan perlahan. Saat level dB mendekati puncak, pakai tombol ±0,1 cm. Resonansi kedua letaknya kira-kira <b>tiga kali</b> resonansi pertama.</p>
+      </div>
+    </div></div>`;
+  // ordering
+  const ordEl = $('#ord');
+  function paintOrd() {
+    ordEl.innerHTML = SHOW.map(i => `<button data-i="${i}" class="${i < picked ? 'used' : ''}">${i < picked ? (i + 1) + '. ' : '• '}${STEPS[i]}</button>`).join('');
+    ordEl.querySelectorAll('button').forEach(b => b.onclick = () => {
+      const i = +b.dataset.i; if (i < picked) return;
+      if (i === picked) { picked++; sfx.ok(); paintOrd(); if (picked === 5) { D.order = true; save(); award('m3order', 40, 'Prosedur tersusun'); $('#labcard').classList.remove('locked'); $('#ordfb').textContent = 'Prosedur benar! Laboratorium dibuka.'; $('#ordfb').className = 'fb good'; } }
+      else { sfx.no(); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); $('#ordfb').textContent = 'Belum urut. Pikirkan: apa yang harus disiapkan lebih dulu?'; $('#ordfb').className = 'fb bad'; }
+    });
+  }
+  paintOrd();
+  if (D.order) { $('#ordfb').textContent = 'Prosedur sudah benar.'; $('#ordfb').className = 'fb good'; }
+
+  let f = 1000, L = 5, on = false, voice = null, amp = 0, t0 = 0;
+  const Lsl = $('#Lsl');
+  const setL = v => { L = Math.max(2, Math.min(45, Math.round(v * 10) / 10)); Lsl.value = L; $('#Lval').textContent = fmt(L, 1); };
+  Lsl.oninput = () => setL(+Lsl.value);
+  root.querySelectorAll('[data-d]').forEach(b => b.onclick = () => setL(L + +b.dataset.d));
+  bindChips($('#labcard'), (n, v) => { f = +v; });
+  $('#tonebtn').onclick = () => {
+    on = !on; $('#tonebtn').textContent = on ? '⏹ Matikan nada' : '🔊 Nyalakan nada';
+    if (on) { voice = new Voice('sine'); } else if (voice) { voice.stop(); voice = null; }
+  };
+  onCleanup(() => { if (voice) voice.stop(); });
+  $('#hint').onclick = () => { $('#hinttxt').style.display = 'block'; };
+  const rev = $('#reveal');
+  const anyFull = () => FREQS.some(q => D.data[q].L1 != null && D.data[q].L2 != null);
+  function table() {
+    $('#t3').innerHTML = FREQS.map(q => `<tr><td>${q}</td><td>${D.data[q].L1 != null ? '<span class="ok">' + fmt(D.data[q].L1) + '</span>' : '–'}</td><td>${D.data[q].L2 != null ? '<span class="ok">' + fmt(D.data[q].L2) + '</span>' : '–'}</td></tr>`).join('');
+    rev.disabled = !anyFull(); rev.parentElement.style.opacity = anyFull() ? 1 : .5;
+  }
+  table();
+  function rec(n) {
+    const fb = $('#rfb'), a = reso(f, L), nn = nearestN(f, L);
+    if (!on) { fb.textContent = 'Nyalakan nada dulu, lalu dengarkan dengungnya.'; fb.className = 'fb info'; return; }
+    if (a < 0.6) { fb.textContent = 'Dengung belum paling keras. Geser pelan-pelan (±0,1 cm) sampai level dB mencapai puncak.'; fb.className = 'fb bad'; sfx.no(); return; }
+    if (nn !== n) {
+      fb.textContent = n === 1 ? (nn > 1 ? `Ini resonansi ke-${nn}. L₁ adalah kolom udara TERPENDEK yang berdengung keras.` : '') :
+        (nn === 1 ? 'Ini masih resonansi pertama. Naikkan pipa lebih jauh untuk mencari dengung keras berikutnya.' : `Kolom terlalu panjang — ini resonansi ke-${nn}. L₂ adalah dengung keras KEDUA.`);
+      fb.className = 'fb bad'; sfx.no(); return;
+    }
+    D.data[f]['L' + n] = L; save(); table(); sfx.ok();
+    fb.textContent = `Tercatat: f = ${f} Hz, L${n === 1 ? '₁' : '₂'} = ${fmt(L)} cm.`; fb.className = 'fb good';
+    award(`m3_${f}_${n}`, 25, `L${n === 1 ? '₁' : '₂'} untuk ${f} Hz`);
+    if (FREQS.every(q => D.data[q].L1 != null && D.data[q].L2 != null)) complete(3);
+  }
+  $('#r1').onclick = () => rec(1); $('#r2').onclick = () => rec(2);
+
+  // drawing
+  const cv = $('#tube'), draw = canvasCtx(cv);
+  let geo = { ppc: 9, yW: 440 };
+  let drag = null;
+  cv.addEventListener('pointerdown', e => { drag = { y: e.clientY, L }; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointermove', e => { if (drag) setL(drag.L + (drag.y - e.clientY) / geo.ppc); });
+  cv.addEventListener('pointerup', () => drag = null);
+  loop((dt, t) => {
+    const target = reso(f, L); amp += (target - amp) * Math.min(1, dt * 12);
+    if (voice) voice.set(f, 0.035 + 0.33 * amp);
+    const db = on ? 42 + 38 * amp + (Math.random() - .5) * 0.6 : 0;
+    $('#meter').style.width = (on ? Math.max(3, (db - 30) / 55 * 100) : 0) + '%';
+    $('#dbv').textContent = on ? fmt(db, 1) + ' dB' : 'nada mati';
+    const { c, w, h } = draw();
+    const yW = h - 80, ppc = (yW - 70) / 46; geo = { ppc, yW };
+    const cx = w * 0.42, pw = 40, yTop = yW - L * ppc;
+    // container
+    const cw = 130, cTop = yW - 40;
+    c.fillStyle = '#123a66'; c.fillRect(cx - cw / 2, yW, cw, h - 20 - yW);
+    c.strokeStyle = '#5a6b94'; c.lineWidth = 2; c.strokeRect(cx - cw / 2, cTop, cw, h - 20 - cTop);
+    c.fillStyle = '#9aa6c8'; c.font = '11px system-ui'; c.textAlign = 'center'; c.fillText('air', cx - cw / 2 + 18, h - 30);
+    // pipe
+    c.fillStyle = 'rgba(160,200,255,.10)'; c.fillRect(cx - pw / 2, yTop, pw, yW - yTop);
+    // standing wave
+    if (rev.checked && !rev.disabled) {
+      const k = 2 * Math.PI / lamCm(f);
+      c.strokeStyle = `rgba(246,173,85,${0.3 + 0.7 * amp})`; c.lineWidth = 2;
+      for (const s of [-1, 1]) { c.beginPath(); for (let y = yW; y >= yTop; y -= 2) { const d = (yW - y) / ppc; const A = Math.abs(Math.sin(k * d)) * (pw / 2 - 4) * (0.25 + 0.75 * amp) * Math.cos(t * 12); y === yW ? c.moveTo(cx + s * A, y) : c.lineTo(cx + s * A, y); } c.stroke(); }
+      c.fillStyle = '#f6ad55'; c.font = '10px system-ui'; c.fillText('simpul', cx, yW - 4);
+    }
+    c.fillStyle = '#123a66'; c.fillRect(cx - pw / 2 + 2, yW, pw - 4, h - 20 - yW);
+    c.strokeStyle = '#cbd5e0'; c.lineWidth = 3;
+    c.beginPath(); c.moveTo(cx - pw / 2, yTop); c.lineTo(cx - pw / 2, h - 26); c.moveTo(cx + pw / 2, yTop); c.lineTo(cx + pw / 2, h - 26); c.stroke();
+    // water surface line
+    c.strokeStyle = '#63b3ed'; c.lineWidth = 2; c.beginPath(); c.moveTo(cx - cw / 2, yW); c.lineTo(cx + cw / 2, yW); c.stroke();
+    // ruler
+    const rx = cx + pw / 2 + 50;
+    c.strokeStyle = '#9aa6c8'; c.lineWidth = 1; c.beginPath(); c.moveTo(rx, yW); c.lineTo(rx, yW - 46 * ppc); c.stroke();
+    c.textAlign = 'left'; c.fillStyle = '#9aa6c8';
+    for (let i = 0; i <= 45; i++) { const y = yW - i * ppc, long = i % 5 === 0; c.beginPath(); c.moveTo(rx, y); c.lineTo(rx + (long ? 12 : 6), y); c.stroke(); if (long) c.fillText(i, rx + 15, y + 4); }
+    c.fillText('cm', rx + 12, yW - 46 * ppc - 4);
+    // L indicator
+    c.strokeStyle = '#4fd1c5'; c.setLineDash([4, 4]); c.beginPath(); c.moveTo(cx + pw / 2, yTop); c.lineTo(rx, yTop); c.stroke(); c.setLineDash([]);
+    c.fillStyle = '#4fd1c5'; c.font = 'bold 12px system-ui'; c.fillText('L = ' + fmt(L) + ' cm', rx + 34, yTop + 4);
+    // glow
+    if (on && amp > 0.15) { const g = c.createRadialGradient(cx, yTop, 2, cx, yTop, 60); g.addColorStop(0, `rgba(79,209,197,${0.55 * amp})`); g.addColorStop(1, 'rgba(79,209,197,0)'); c.fillStyle = g; c.fillRect(cx - 60, yTop - 60, 120, 120); }
+    // phone
+    const py = yTop - 44;
+    c.fillStyle = '#2d3748'; c.strokeStyle = '#a0aec0'; c.lineWidth = 1.5;
+    rr(c, cx - 34, py - 12, 68, 26, 6); c.fill(); c.stroke();
+    c.fillStyle = on ? '#4fd1c5' : '#718096'; c.font = 'bold 10px system-ui'; c.textAlign = 'center'; c.fillText(f + ' Hz', cx, py + 5);
+    if (on) { c.strokeStyle = `rgba(79,209,197,.6)`; c.lineWidth = 1.5; for (let i = 0; i < 3; i++) { const r = ((t * 30 + i * 10) % 30) + 4; c.globalAlpha = 1 - r / 34; c.beginPath(); c.arc(cx, py + 14, r, 0.2 * Math.PI, 0.8 * Math.PI); c.stroke(); } c.globalAlpha = 1; }
+    c.textAlign = 'left';
+  });
+}
+function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+
+/* ================= MISI 4 : ANALISIS ================= */
+function m4(root) {
+  const D3 = S.m3.data, C = S.m4.calc;
+  const hasData = FREQS.every(f => D3[f].L1 != null && D3[f].L2 != null);
+  const lamE = f => 2 * (D3[f].L2 - D3[f].L1) / 100;
+  const rowOk = f => S.m4.ok[f];
+  root.innerHTML = `
+  <div class="card story"><div class="tag">📈 Ruang Analisis</div>
+    <p>Data kalian sudah terkumpul. Sekarang ubah angka menjadi <b>pola</b>. Gunakan rumus dari LKPD:</p>
+    <div class="row"><span class="formula">λ = 2 (L₂ − L₁)</span><span class="formula">v = λ · f</span></div>
+    <p class="sub">Ubah cm ke meter: 34,3 cm = 0,343 m.</p></div>
+  ${hasData ? '' : '<div class="card"><p class="no">Data Misi 3 belum lengkap. Selesaikan pengukuran L₁ dan L₂ dulu.</p></div>'}
+  <div class="card"><h3>🧮 Langkah 1 · Hitung λ dan v <span class="st M">M</span></h3>
+    <div class="tablewrap"><table><thead><tr><th>f (Hz)</th><th>L₁ (cm)</th><th>L₂ (cm)</th><th>λ (m)</th><th>v = λf (m/s)</th><th></th></tr></thead>
+    <tbody>${FREQS.map(f => `<tr><td>${f}</td><td>${fmt(D3[f].L1)}</td><td>${fmt(D3[f].L2)}</td>
+      <td><input data-lam="${f}" value="${esc(C[f].lam || '')}" placeholder="0,…" ${hasData ? '' : 'disabled'}></td>
+      <td><input data-v="${f}" value="${esc(C[f].v || '')}" placeholder="…" ${hasData ? '' : 'disabled'}></td>
+      <td id="st${f}">${rowOk(f) ? '<span class="ok">✔</span>' : ''}</td></tr>`).join('')}</tbody></table></div>
+    <div class="row" style="margin-top:10px"><button class="btn" id="chk4" ${hasData ? '' : 'disabled'}>✔ Periksa perhitungan</button><span class="fb" id="fb4"></span></div>
+  </div>
+  <div class="card" id="pat" style="display:none"><h3>🔍 Langkah 2 · Temukan polanya</h3>
+    <div class="grid2"><canvas id="gl" style="height:220px"></canvas><canvas id="gv" style="height:220px"></canvas></div>
+    <div class="cmp" style="margin-top:12px"><div><b>Prediksimu (Misi 1)</b><br>λ akan <b>${({ naik: 'membesar', turun: 'mengecil', tetap: 'tetap' })[S.pred.lam] || '–'}</b>, v akan <b>${({ naik: 'makin cepat', turun: 'makin lambat', tetap: 'tetap' })[S.pred.v] || '–'}</b>.</div>
+      <div><b>Kata datamu</b><br><span id="datasays">–</span></div></div>
+    ${mcq('m4a', 'Ketika frekuensi dinaikkan, panjang gelombang λ …', ['Membesar', 'Mengecil', 'Tetap'], 1, 'Betul! Grafik λ turun ketika f naik (λ berbanding terbalik dengan f).', 'Lihat grafik kiri: ke mana titik-titik bergerak saat f makin besar?', { onAns: check })}
+    ${mcq('m4b', 'Cepat rambat bunyi v pada ketiga frekuensi …', ['Ikut naik', 'Ikut turun', 'Relatif tetap, sekitar 343 m/s'], 2, 'Tepat! Nilai v hampir sama di ketiga frekuensi. Jadi frekuensi tinggi BUKAN berarti bunyi lebih cepat.', 'Lihat grafik kanan: apakah garisnya naik?', { onAns: check })}
+    ${mcq('m4c', 'Kesimpulan: cepat rambat bunyi ditentukan oleh …', ['Frekuensi sumber bunyi', 'Medium (jenis dan suhu udara) yang dilalui bunyi', 'Seberapa keras ponsel berbunyi'], 1, 'Benar! Medium menentukan v; sumber menentukan f; λ menyesuaikan: λ = v/f.', 'Apa yang sama di ketiga percobaan, padahal frekuensinya berbeda?', { onAns: check })}
+  </div>
+  <div class="card" id="eng" style="display:none"><h3>⚙️ Langkah 3 · Tantangan insinyur: koreksi ujung <span class="st E">E</span></h3>
+    <p>Beberapa siswa menghitung λ = 4L₁. Bandingkan:</p>
+    <div class="tablewrap"><table><thead><tr><th>f (Hz)</th><th>4L₁ (m)</th><th>2(L₂−L₁) (m)</th><th>selisih</th></tr></thead><tbody>
+    ${FREQS.map(f => hasData ? `<tr><td>${f}</td><td>${fmt(4 * D3[f].L1 / 100, 3)}</td><td>${fmt(lamE(f), 3)}</td><td>${fmt((lamE(f) - 4 * D3[f].L1 / 100) * 100, 1)} cm</td></tr>` : '').join('')}
+    </tbody></table></div>
+    ${mcq('m4d', 'Mengapa 4L₁ selalu sedikit lebih kecil, dan mengapa LKPD memakai λ = 2(L₂ − L₁)?', ['Karena L₁ selalu salah ukur', 'Karena perut gelombang berada sedikit di atas mulut pipa (koreksi ujung); selisih L₂ − L₁ tepat ½λ sehingga koreksi itu hilang', 'Supaya hitungannya lebih cepat saja'], 1, 'Hebat! L₁ = ¼λ − e dan L₂ = ¾λ − e, sehingga L₂ − L₁ = ½λ — koreksi ujung e tereliminasi.', 'Bandingkan kolom selisih: hampir sama untuk semua frekuensi. Ada "tambahan" tetap di mulut pipa.', { onAns: check })}
+  </div>`;
+  root.querySelectorAll('[data-lam]').forEach(i => i.oninput = () => { C[i.dataset.lam].lam = i.value; save(); });
+  root.querySelectorAll('[data-v]').forEach(i => i.oninput = () => { C[i.dataset.v].v = i.value; save(); });
+  $('#chk4').onclick = () => {
+    let all = true, msg = '';
+    FREQS.forEach(f => {
+      const l = num(C[f].lam), v = num(C[f].v), le = lamE(f), ve = le * f;
+      let ok = Math.abs(l - le) <= Math.max(0.004, le * 0.015) && Math.abs(v - ve) <= ve * 0.02;
+      if (!ok) { all = false; if (l > 2 && !msg) msg = 'λ harus dalam meter (bagi cm dengan 100).'; else if (Math.abs(l - le) > 0.004 && !msg) msg = `Periksa λ untuk ${f} Hz: 2 × (L₂ − L₁), lalu ubah ke meter.`; else if (!msg) msg = `Periksa v untuk ${f} Hz: v = λ × f.`; }
+      S.m4.ok[f] = ok; $('#st' + f).innerHTML = ok ? '<span class="ok">✔</span>' : '<span class="no">✘</span>';
+      if (ok) award('m4row' + f, 25, `Perhitungan ${f} Hz`);
+    });
+    save();
+    const fb = $('#fb4'); if (all) { fb.textContent = 'Semua perhitungan benar!'; fb.className = 'fb good'; sfx.ok(); showPat(); } else { fb.textContent = msg; fb.className = 'fb bad'; sfx.no(); }
+  };
+  function showPat() {
+    $('#pat').style.display = 'block'; $('#eng').style.display = 'block'; paintAllQ(root);
+    const pts = FREQS.map(f => ({ f, l: lamE(f), v: lamE(f) * f }));
+    $('#datasays').innerHTML = `λ: ${pts.map(p => fmt(p.l, 3)).join(' → ')} m (mengecil)<br>v: ${pts.map(p => fmt(p.v, 0)).join(', ')} m/s (relatif tetap)`;
+    scatter($('#gl'), pts.map(p => [p.f, p.l]), 'f (Hz)', 'λ (m)', [0.2, 0.5], '#4fd1c5');
+    scatter($('#gv'), pts.map(p => [p.f, p.v]), 'f (Hz)', 'v (m/s)', [0, 500], '#f6ad55');
+  }
+  function check() { if (FREQS.every(rowOk) && ['m4a', 'm4b', 'm4c', 'm4d'].every(qOk)) complete(4); }
+  if (hasData && FREQS.every(rowOk)) showPat();
+}
+function scatter(cv, pts, xl, yl, yr, col) {
+  const { c, w, h } = canvasCtx(cv)();
+  const L = 52, R = 14, T = 14, B = 36, x0 = 700, x1 = 1300;
+  const X = x => L + (x - x0) / (x1 - x0) * (w - L - R), Y = y => h - B - (y - yr[0]) / (yr[1] - yr[0]) * (h - T - B);
+  c.strokeStyle = '#2a3558'; c.fillStyle = '#9aa6c8'; c.font = '11px system-ui'; c.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) { const y = yr[0] + (yr[1] - yr[0]) * i / 4; c.beginPath(); c.moveTo(L, Y(y)); c.lineTo(w - R, Y(y)); c.stroke(); c.textAlign = 'right'; c.fillText(fmt(y, yr[1] < 2 ? 2 : 0), L - 6, Y(y) + 4); }
+  c.textAlign = 'center'; [800, 1000, 1200].forEach(x => c.fillText(x, X(x), h - B + 16)); c.fillText(xl, (w + L) / 2, h - 4);
+  c.save(); c.translate(12, h / 2); c.rotate(-Math.PI / 2); c.fillText(yl, 0, 0); c.restore();
+  c.strokeStyle = col; c.lineWidth = 2; c.beginPath(); pts.forEach((p, i) => i ? c.lineTo(X(p[0]), Y(p[1])) : c.moveTo(X(p[0]), Y(p[1]))); c.stroke();
+  pts.forEach(p => { c.fillStyle = col; c.beginPath(); c.arc(X(p[0]), Y(p[1]), 5, 0, 7); c.fill(); });
+}
+
+/* ================= MISI 5 : DOPPLER ================= */
+const SRC = {
+  phone: { name: 'Ponsel 4000 Hz', f0: 4000, type: 'sine', lp: 0, base: () => 4000 },
+  siren: { name: 'Sirene ambulans', f0: 800, type: 'sawtooth', lp: 2400, base: t => 800 + 230 * Math.sin(2 * Math.PI * t / 2.2) },
+  horn: { name: 'Klakson 440 Hz', f0: 440, type: 'square', lp: 1800, base: () => 440 }
+};
+function m5(root) {
+  const D = S.m5;
+  let src = 'phone', vs = 2, sim = null, data = [], voice = null, sampT = 0, cur = { f: 0, db: 0, r: 0, v: 0 };
+  root.innerHTML = `
+  <div class="card story"><div class="tag">🚑 Kasus 2 · Bagian B</div>
+    <p>Ponsel A membunyikan nada tetap <b>4000 Hz</b> dan dibawa seorang siswa <b>berjalan cepat</b> melewati ponsel B yang merekam dengan <b>Spektrum Audio</b>. Apakah frekuensi yang terekam sama dengan 4000 Hz? Uji sendiri!</p>
+    <p class="sub">🎧 Gunakan headset/speaker. Bunyi di simulasi ini adalah bunyi yang <b>diterima ponsel B</b>: frekuensinya bergeser sesuai efek Doppler dan kenyaringannya berubah sesuai jarak.</p></div>
+  <div class="card"><h3>🧮 Langkah 1 · Prediksi dengan rumus <span class="st M">M</span></h3>
+    <p>f = 4000 Hz, kecepatan jalan vₛ ≈ 2 m/s, cepat rambat bunyi v = 343 m/s (hasil temuanmu di Misi 4!).</p>
+    <span class="formula">Δf ≈ f × vₛ / v</span>
+    <label class="l">Prediksi pergeseran frekuensi Δf (Hz)</label>
+    <div class="row"><input id="pdf" value="${esc(D.pred)}" placeholder="… Hz" style="width:140px"><button class="btn small" id="pchk">Cek</button><span class="fb" id="pfb"></span></div>
+    <p class="sub" id="pres"></p>
+  </div>
+  <div class="card ${D.predOk ? '' : 'locked'}" id="mcard"><h3>📱 Langkah 2 · Ukur dengan ponsel <span class="st T">T</span></h3>
+    <div class="grid2"><div><label class="l">Sumber bunyi</label>${chips('src', [['phone', '📱 Ponsel 4000 Hz'], ['siren', '🚑 Sirene'], ['horn', '📯 Klakson 440 Hz']], 'phone')}</div>
+      <div><label class="l">Kecepatan sumber: <b id="vsl">2,0 m/s</b></label>${chips('spd', [[2, '🚶 Jalan cepat 2'], [5, '🏃 Lari 5'], [15, '🏍️ Motor 15'], [25, '🚑 Mobil 25']], 2)}
+      <input type="range" id="vsr" min="0.5" max="30" step="0.5" value="2" style="width:100%"></div></div>
+    <div class="row" style="margin:8px 0"><button class="btn" id="go">▶ Jalan melewati perekam</button><button class="btn alt" id="still">🧍 Uji: sumber diam (dekat lalu jauh)</button><button class="btn alt" id="stop">⏹ Stop</button></div>
+    <canvas id="scene" style="height:190px"></canvas>
+    <div class="readouts"><div class="ro"><div class="k">f terekam ponsel B</div><div class="v" id="rf">–</div></div>
+      <div class="ro"><div class="k">Kenyaringan</div><div class="v" id="rdb">–</div></div>
+      <div class="ro"><div class="k">Jarak ke perekam</div><div class="v" id="rr">–</div></div>
+      <div class="ro"><div class="k">Gerak sumber</div><div class="v" id="rv">–</div></div></div>
+    <canvas id="graph" style="height:280px"></canvas>
+    <p class="sub">Grafik atas: frekuensi terekam (garis putus-putus = frekuensi sumber). Grafik bawah: kenyaringan. Arahkan/ketuk grafik untuk membaca nilainya.</p>
+  </div>
+  <div class="card ${D.predOk ? '' : 'locked'}" id="rcard"><h3>📝 Langkah 3 · Baca grafik & bandingkan</h3>
+    <p>Jalankan <b>Ponsel 4000 Hz</b>, lalu baca nilai frekuensi yang <b>datar</b> saat mendekat dan saat menjauh.</p>
+    <div class="row"><label>f saat mendekat <input id="fN" value="${esc(D.fN)}" style="width:110px"> Hz</label><label>f saat menjauh <input id="fF" value="${esc(D.fF)}" style="width:110px"> Hz</label><button class="btn small" id="mchk">Periksa</button></div>
+    <div class="fb" id="mfb"></div><div id="mres"></div>
+  </div>
+  <div class="card ${D.still ? '' : 'locked'}" id="scard"><h3>🧪 Langkah 4 · Uji miskonsepsi</h3>
+    <p class="sub">Terbuka setelah kamu menjalankan "Uji: sumber diam".</p>
+    ${mcq('m5q', 'Pada uji "sumber diam", ponsel A diletakkan dekat lalu jauh dari perekam tanpa bergerak. Apa yang berubah pada rekaman?', ['Frekuensi dan kenyaringan', 'Hanya kenyaringan — frekuensi tetap 4000 Hz', 'Hanya frekuensi', 'Tidak ada'], 1, 'Tepat! Jarak memengaruhi kenyaringan, bukan frekuensi. Frekuensi bergeser hanya jika ada GERAK relatif. Jadi "Doppler = bunyi makin keras" itu miskonsepsi.', 'Lihat lagi grafik atas (frekuensi) saat uji sumber diam.', { onAns: check })}
+  </div>
+  <div class="card"><h3>🎧 Bonus · Mode Telinga</h3>
+    <p>Pergeseran ±23 Hz dari 4000 Hz sangat kecil untuk telinga — karena itu kita butuh <b>ponsel sebagai alat ukur</b>. Coba <b>Sirene</b> atau <b>Klakson</b> dengan kecepatan <b>Motor/Mobil</b>, dengarkan nada "turun" saat lewat. (+30 XP)</p></div>`;
+  // prediction
+  $('#pchk').onclick = () => {
+    const x = num($('#pdf').value); D.pred = $('#pdf').value; save();
+    const fb = $('#pfb'), ex = 4000 * 2 / 343;
+    if (x >= 21 && x <= 25.5) { D.predOk = true; save(); fb.textContent = `Benar! Δf ≈ 4000 × 2 / 343 ≈ ${fmt(ex, 1)} Hz`; fb.className = 'fb good'; sfx.ok(); award('m5pred', 40, 'Prediksi Doppler'); $('#mcard').classList.remove('locked'); $('#rcard').classList.remove('locked'); showPres(); }
+    else { fb.textContent = 'Belum tepat. Kalikan 4000 dengan 2, lalu bagi dengan 343.'; fb.className = 'fb bad'; sfx.no(); }
+  };
+  function showPres() { $('#pres').innerHTML = `Jadi saat mendekat diprediksi ≈ <b>${fmt(4000 + 4000 * 2 / 343, 0)} Hz</b>, saat menjauh ≈ <b>${fmt(4000 - 4000 * 2 / 343, 0)} Hz</b>.`; }
+  if (D.predOk) { $('#pfb').textContent = 'Prediksi sudah benar.'; $('#pfb').className = 'fb good'; showPres(); }
+  // controls
+  const setVs = v => { vs = v; $('#vsr').value = v; $('#vsl').textContent = fmt(v, 1) + ' m/s'; };
+  bindChips($('#mcard'), (n, v) => { if (n === 'src') src = v; if (n === 'spd') setVs(+v); });
+  $('#vsr').oninput = e => { setVs(+e.target.value); $('#mcard').querySelectorAll('[data-name=spd] .chip').forEach(c => c.classList.remove('sel')); };
+  const stopRun = () => { if (voice) { voice.stop(); voice = null; } sim = null; };
+  onCleanup(stopRun);
+  $('#stop').onclick = stopRun;
+  $('#go').onclick = () => start('walk');
+  $('#still').onclick = () => start('still');
+  function start(kind) {
+    stopRun(); ac();
+    const s = kind === 'still' ? 'phone' : src, sp = kind === 'still' ? 0 : vs;
+    const Lh = Math.max(10, sp * 5);
+    sim = { kind, src: s, vs: sp, Lh, t: 0, x: kind === 'still' ? -0.5 : -Lh, d: 0.6 };
+    data = []; sampT = 0; voice = new Voice(SRC[s].type, SRC[s].lp);
+  }
+  function finish() {
+    const s = sim; stopRun();
+    if (s.kind === 'still') { D.still = true; save(); $('#scard').classList.remove('locked'); award('m5still', 25, 'Uji sumber diam'); }
+    else if (s.src === 'phone') { D.last = { vs: s.vs }; save(); award('m5run', 25, 'Pengukuran Doppler'); toast(`Rekaman selesai (vₛ = ${fmt(s.vs, 1)} m/s). Baca grafiknya!`); }
+    if (s.kind === 'walk' && s.src !== 'phone' && s.vs >= 15) award('m5ear', 30, 'Telinga Doppler');
+  }
+  $('#mchk').onclick = () => {
+    D.fN = $('#fN').value; D.fF = $('#fF').value; save();
+    const fb = $('#mfb');
+    if (!D.last) { fb.textContent = 'Jalankan dulu pengukuran dengan sumber "Ponsel 4000 Hz".'; fb.className = 'fb info'; return; }
+    const v = D.last.vs, eN = 4000 * V / (V - v), eF = 4000 * V / (V + v), n = num(D.fN), f = num(D.fF);
+    if (Math.abs(n - eN) <= 3 && Math.abs(f - eF) <= 3) {
+      D.measOk = true; save(); sfx.ok(); fb.textContent = 'Pembacaan grafik tepat!'; fb.className = 'fb good'; award('m5meas', 40, 'Membaca data Doppler'); showRes(); check();
+    } else { sfx.no(); fb.textContent = 'Belum sesuai rekaman terakhir. Baca bagian grafik yang datar (jauh sebelum dan jauh sesudah melewati perekam).'; fb.className = 'fb bad'; }
+  };
+  function showRes() {
+    const v = D.last.vs, n = num(D.fN), f = num(D.fF), dm = (n - f) / 2, dp = 4000 * v / V;
+    $('#mres').innerHTML = `<div class="cmp" style="margin-top:8px"><div><b>Hasil ukur</b><br>Mendekat: ${fmt(n, 1)} Hz (Δ = +${fmt(n - 4000, 1)})<br>Menjauh: ${fmt(f, 1)} Hz (Δ = ${fmt(f - 4000, 1)})<br>Rata-rata |Δf| = <b>${fmt(dm, 1)} Hz</b></div>
+      <div><b>Prediksi rumus</b> (vₛ = ${fmt(v, 1)} m/s)<br>Δf ≈ 4000 × ${fmt(v, 1)} / 343 = <b>${fmt(dp, 1)} Hz</b><br>Selisih: ${fmt(Math.abs(dm - dp) / dp * 100, 1)} %<br>Prediksi Misi 1: <b>${({ naik: 'frekuensi naik', keras: 'hanya makin keras', turun: 'frekuensi turun', tetap: 'tidak berubah' })[S.pred.dop] || '–'}</b> ${S.pred.dop === 'naik' ? '✔' : '→ terbantah data'}</div></div>`;
+  }
+  if (D.measOk && D.last) showRes();
+  function check() { if (D.predOk && D.measOk && qOk('m5q')) complete(5); }
+
+  const dScene = canvasCtx($('#scene')), dGraph = canvasCtx($('#graph'));
+  let hoverX = null; const gcv = $('#graph');
+  gcv.addEventListener('pointermove', e => { hoverX = e.clientX - gcv.getBoundingClientRect().left; });
+  gcv.addEventListener('pointerdown', e => { hoverX = e.clientX - gcv.getBoundingClientRect().left; });
+  gcv.addEventListener('pointerleave', () => { hoverX = null; });
+  loop((dt, T) => {
+    if (sim) {
+      sim.t += dt;
+      if (sim.kind === 'still') { sim.x = sim.t < 3 ? -0.5 : -8; if (sim.t > 6) { finish(); } }
+      else { sim.x += sim.vs * dt; if (sim.x > sim.Lh) finish(); }
+    }
+    if (sim) {
+      const r = Math.hypot(sim.x, sim.d), cosT = -sim.x / r, fb = SRC[sim.src].base(sim.t);
+      const fo = fb * V / (V - sim.vs * cosT), db = 70 - 20 * Math.log10(r / 0.6);
+      voice.set(fo, (sim.src === 'phone' ? 0.2 : 0.3) * Math.min(1, Math.pow(1.2 / r, 0.7)));
+      cur = { f: fo, db, r, v: sim.vs * cosT };
+      sampT += dt; if (sampT >= 0.05) { sampT = 0; data.push({ t: sim.t, f: fo + (Math.random() - .5) * 0.8, db: db + (Math.random() - .5) * 0.8, f0: fb }); }
+      $('#rf').textContent = fmt(fo, 1) + ' Hz'; $('#rdb').textContent = fmt(db, 0) + ' dB'; $('#rr').textContent = fmt(r, 1) + ' m';
+      $('#rv').textContent = sim.vs === 0 ? 'diam' : (cosT > 0.05 ? 'mendekat' : cosT < -0.05 ? 'menjauh' : 'lewat');
+    }
+    // scene
+    { const { c, w, h } = dScene(); const s = sim || { x: -10, Lh: 10, d: 0.6, src, vs };
+      const Lh = s.Lh || 10, X = x => w / 2 + x / Lh * (w / 2 - 30), py = 55, oy = 145;
+      c.fillStyle = '#10182e'; c.fillRect(0, py + 18, w, 14);
+      c.strokeStyle = '#2a3558'; c.setLineDash([8, 8]); c.beginPath(); c.moveTo(0, py + 25); c.lineTo(w, py + 25); c.stroke(); c.setLineDash([]);
+      c.fillStyle = '#9aa6c8'; c.font = '11px system-ui'; c.textAlign = 'left'; c.fillText(`lintasan sumber (±${fmt(Lh, 0)} m)`, 8, py + 46);
+      // observer phone
+      c.fillStyle = '#2d3748'; c.strokeStyle = '#a0aec0'; rr(c, w / 2 - 34, oy - 14, 68, 40, 6); c.fill(); c.stroke();
+      c.fillStyle = '#4fd1c5'; c.font = 'bold 11px system-ui'; c.textAlign = 'center'; c.fillText(sim ? fmt(cur.f, 0) + ' Hz' : 'B', w / 2, oy + 4);
+      c.fillStyle = '#9aa6c8'; c.font = '10px system-ui'; c.fillText('Ponsel B · perekam', w / 2, oy + 38);
+      // spectrum mini
+      if (sim) { c.strokeStyle = '#f6ad55'; c.beginPath(); for (let i = 0; i < 50; i++) { const xx = w / 2 - 25 + i, pk = Math.exp(-Math.pow((i - 25 - (cur.f - SRC[sim.src].f0) / 3) / 2, 2)); c.lineTo(xx, oy + 18 - pk * 10); } c.stroke(); }
+      // source
+      const sx = X(s.x);
+      if (sim) { for (let i = 0; i < 3; i++) { const rr2 = ((T * 40 + i * 14) % 42) + 6; c.strokeStyle = `rgba(79,209,197,${1 - rr2 / 48})`; c.beginPath(); c.arc(sx, py, rr2, 0, 7); c.stroke(); } }
+      c.font = '28px system-ui'; c.textAlign = 'center'; c.fillText(s.src === 'siren' ? '🚑' : (s.vs >= 12 ? '🏍️' : '🚶'), sx, py + 10);
+      c.font = 'bold 10px system-ui'; c.fillStyle = '#f6ad55'; c.fillText(SRC[s.src].name, sx, py - 22);
+      if (sim && sim.vs > 0) { c.fillStyle = '#9aa6c8'; c.fillText(sim.x < 0 ? 'mendekat →' : 'menjauh →', sx, py + 34); }
+    }
+    // graph
+    { const { c, w, h } = dGraph(); const Lm = 58, R = 12, top = 10, mid = h * 0.62, bot = h - 26;
+      c.font = '11px system-ui'; c.fillStyle = '#9aa6c8';
+      if (!data.length) { c.textAlign = 'center'; c.fillText('Tekan ▶ untuk mulai merekam', w / 2, h / 2); return; }
+      const tmax = Math.max(data[data.length - 1].t, 1), X = t => Lm + t / tmax * (w - Lm - R);
+      let fmin = Infinity, fmax = -Infinity; data.forEach(p => { fmin = Math.min(fmin, p.f, p.f0); fmax = Math.max(fmax, p.f, p.f0); });
+      const pad = Math.max(6, (fmax - fmin) * 0.15); fmin -= pad; fmax += pad; if (fmax - fmin < 20) { const m = (fmax + fmin) / 2; fmin = m - 10; fmax = m + 10; }
+      const Yf = f => top + (fmax - f) / (fmax - fmin) * (mid - 20 - top);
+      let dmin = Infinity, dmax = -Infinity; data.forEach(p => { dmin = Math.min(dmin, p.db); dmax = Math.max(dmax, p.db); }); dmin -= 3; dmax += 3;
+      const Yd = d => mid + (dmax - d) / (dmax - dmin) * (bot - mid);
+      c.strokeStyle = '#1e2a4a'; c.lineWidth = 1; c.textAlign = 'right';
+      const raw = (fmax - fmin) / 7, mag = Math.pow(10, Math.floor(Math.log10(raw))), stp = [1, 2, 5, 10].map(k => k * mag).find(s => s >= raw);
+      for (let f = Math.ceil(fmin / stp) * stp; f <= fmax; f += stp) { c.beginPath(); c.moveTo(Lm, Yf(f)); c.lineTo(w - R, Yf(f)); c.stroke(); c.fillText(fmt(f, stp < 1 ? 1 : 0), Lm - 6, Yf(f) + 4); }
+      for (let i = 0; i <= 2; i++) { const d = dmin + (dmax - dmin) * i / 2; c.beginPath(); c.moveTo(Lm, Yd(d)); c.lineTo(w - R, Yd(d)); c.stroke(); c.fillText(fmt(d, 0) + ' dB', Lm - 6, Yd(d) + 4); }
+      c.textAlign = 'center'; for (let i = 0; i <= 5; i++) c.fillText(fmt(tmax * i / 5, 1) + ' s', X(tmax * i / 5), h - 8);
+      c.save(); c.translate(11, (top + mid) / 2); c.rotate(-Math.PI / 2); c.fillText('f (Hz)', 0, 0); c.restore();
+      c.strokeStyle = '#9aa6c8'; c.setLineDash([5, 5]); c.beginPath(); data.forEach((p, i) => i ? c.lineTo(X(p.t), Yf(p.f0)) : c.moveTo(X(p.t), Yf(p.f0))); c.stroke(); c.setLineDash([]);
+      c.strokeStyle = '#4fd1c5'; c.lineWidth = 2; c.beginPath(); data.forEach((p, i) => i ? c.lineTo(X(p.t), Yf(p.f)) : c.moveTo(X(p.t), Yf(p.f))); c.stroke();
+      c.strokeStyle = '#f6ad55'; c.lineWidth = 2; c.beginPath(); data.forEach((p, i) => i ? c.lineTo(X(p.t), Yd(p.db)) : c.moveTo(X(p.t), Yd(p.db))); c.stroke();
+      if (hoverX != null && hoverX > Lm) { // kursor pembaca grafik
+        const tt = (hoverX - Lm) / (w - Lm - R) * tmax; let p = data[0]; data.forEach(q => { if (Math.abs(q.t - tt) < Math.abs(p.t - tt)) p = q; });
+        c.strokeStyle = '#e8ecf8'; c.lineWidth = 1; c.beginPath(); c.moveTo(X(p.t), top); c.lineTo(X(p.t), bot); c.stroke();
+        const lab = `t=${fmt(p.t, 1)} s · f=${fmt(p.f, 1)} Hz · ${fmt(p.db, 0)} dB`; c.font = 'bold 11px system-ui'; const tw = c.measureText(lab).width + 12;
+        const bx = Math.min(w - R - tw, Math.max(Lm, X(p.t) + 6)); c.fillStyle = 'rgba(19,26,48,.92)'; c.fillRect(bx, top + 2, tw, 20); c.fillStyle = '#e8ecf8'; c.textAlign = 'left'; c.fillText(lab, bx + 6, top + 16);
+      }
+    }
+  });
+}
+
+/* ================= MISI 6 : MUKA GELOMBANG ================= */
+function m6(root) {
+  root.innerHTML = `
+  <div class="card story"><div class="tag">🌊 Ruang Penjelasan</div>
+    <p>Data sudah membuktikan: frekuensi terekam berubah saat sumber bergerak. Tapi <b>mengapa</b>? Amati diagram muka gelombang. Setiap lingkaran adalah satu "puncak" gelombang yang dipancarkan sumber.</p>
+    <p class="sub">Kecepatan sumber di diagram <b>diperbesar</b> agar efeknya terlihat (2 m/s terlalu kecil dibanding 343 m/s).</p></div>
+  <div class="card"><h3>🔭 Amati diagram</h3>
+    <label class="l">Kecepatan sumber / cepat rambat bunyi: <b id="rl">0,40</b></label>
+    <input type="range" id="ratio" min="0" max="0.85" step="0.05" value="0.4" style="width:100%">
+    <canvas id="wf" style="height:340px;margin-top:8px"></canvas>
+    <div class="readouts"><div class="ro"><div class="k">Frekuensi sumber</div><div class="v">500 Hz</div></div>
+      <div class="ro"><div class="k">Di A (depan)</div><div class="v" id="fa">–</div></div>
+      <div class="ro"><div class="k">Di B (belakang)</div><div class="v" id="fbb">–</div></div>
+      <div class="ro"><div class="k">λ depan : belakang</div><div class="v" id="lr">–</div></div></div>
+    <div class="row"><button class="btn alt" id="hs">🔈 Dengar sumber</button><button class="btn alt" id="ha">🔊 Dengar di A</button><button class="btn alt" id="hb">🔉 Dengar di B</button><button class="btn alt" id="pp">⏸ Jeda</button></div>
+  </div>
+  <div class="card"><h3>💬 Jelaskan temuanmu</h3>
+    ${mcq('m6a', 'Apakah frekuensi SUMBER berubah saat sumber bergerak?', ['Ya, sumber bergetar lebih cepat saat mendekat', 'Tidak, sumber tetap memancarkan gelombang dengan frekuensi yang sama', 'Ya, sumber bergetar lebih lambat saat mendekat'], 1, 'Benar! Ponsel A tetap memancarkan 4000 getaran per detik. Jarak antarlingkaran saat dipancarkan selalu sama dalam waktu (periode tetap).', 'Perhatikan: lingkaran dipancarkan dengan selang waktu yang tetap.', { onAns: check })}
+    ${mcq('m6b', 'Mengapa frekuensi yang TERUKUR di depan sumber lebih tinggi?', ['Muka gelombang di depan sumber menjadi lebih rapat (λ lebih pendek), sehingga lebih banyak muka gelombang tiba di pengamat setiap detik', 'Bunyi merambat lebih cepat ke depan', 'Bunyi menjadi lebih keras di depan'], 0, 'Tepat! v tetap, λ di depan mengecil, sehingga f = v/λ terukur lebih besar. Di belakang sebaliknya.', 'Bandingkan jarak antarlingkaran di depan (A) dan di belakang (B).', { onAns: check })}
+    ${mcq('m6c', 'Benarkah: "Saat sumber mendekat, bunyi merambat lebih cepat ke arah kita"?', ['Benar, kecepatan bunyi bertambah sebesar kecepatan sumber', 'Salah, cepat rambat bunyi ditentukan medium (tetap ±343 m/s); yang berubah adalah λ dan frekuensi terukur'], 1, 'Betul! Lihat: semua lingkaran membesar dengan laju yang sama, ke segala arah.', 'Perhatikan laju membesarnya lingkaran ke kiri dan ke kanan.', { onAns: check })}
+    <label class="l">Dengan kata-kata kelompokmu: jelaskan hasil pengukuran Doppler memakai diagram muka gelombang</label>
+    <textarea id="exp" placeholder="Ketika sumber mendekat, muka gelombang …">${esc(S.m6.text)}</textarea>
+    <div class="row"><button class="btn small" id="savex">💾 Simpan penjelasan</button><span class="fb" id="xfb"></span></div>
+  </div>`;
+  let ratio = 0.4, paused = false, t = 0, waves = [], lastE = -1, sx0 = 0;
+  const c0 = 110, T = 0.32;
+  $('#ratio').oninput = e => { ratio = +e.target.value; $('#rl').textContent = fmt(ratio, 2); waves = []; t = 0; lastE = -1; };
+  $('#pp').onclick = () => { paused = !paused; $('#pp').textContent = paused ? '▶ Lanjut' : '⏸ Jeda'; };
+  $('#hs').onclick = () => sfx.tone(500, 1.2, 0.2);
+  $('#ha').onclick = () => sfx.tone(500 / (1 - ratio), 1.2, 0.2);
+  $('#hb').onclick = () => sfx.tone(500 / (1 + ratio), 1.2, 0.2);
+  $('#exp').oninput = e => { S.m6.text = e.target.value; save(); };
+  $('#savex').onclick = () => { if ((S.m6.text || '').trim().length < 25) { $('#xfb').textContent = 'Tulis penjelasan minimal dua kalimat.'; $('#xfb').className = 'fb bad'; sfx.no(); return; } $('#xfb').textContent = 'Tersimpan.'; $('#xfb').className = 'fb good'; award('m6text', 40, 'Penjelasan ditulis'); check(); };
+  function check() { if (['m6a', 'm6b', 'm6c'].every(qOk) && S.aw.m6text) complete(6); }
+  const draw = canvasCtx($('#wf'));
+  loop(dt => {
+    const { c, w, h } = draw(); if (!paused) t += dt;
+    const u = ratio * c0, span = w * 0.5, start = w * 0.25;
+    let travel = (u * t) % span; if (u === 0) travel = span / 2;
+    if (u > 0 && u * t > span) { // wrap
+      t = 0; waves = []; lastE = -1; travel = 0;
+    }
+    const sx = start + travel, sy = h / 2;
+    const k = Math.floor(t / T);
+    if (k !== lastE && !paused) { lastE = k; waves.push({ x: sx, te: t }); if (waves.length > 40) waves.shift(); }
+    c.lineWidth = 1.6;
+    waves.forEach(wv => { const r = c0 * (t - wv.te); if (r < 0) return; c.strokeStyle = `rgba(79,209,197,${Math.max(0.1, 1 - r / (w * 0.8))})`; c.beginPath(); c.arc(wv.x, sy, r, 0, 7); c.stroke(); });
+    c.fillStyle = '#f6ad55'; c.beginPath(); c.arc(sx, sy, 8, 0, 7); c.fill();
+    if (u > 0) { c.strokeStyle = '#f6ad55'; c.lineWidth = 2; c.beginPath(); c.moveTo(sx + 12, sy); c.lineTo(sx + 40, sy); c.lineTo(sx + 33, sy - 5); c.moveTo(sx + 40, sy); c.lineTo(sx + 33, sy + 5); c.stroke(); }
+    c.font = 'bold 13px system-ui'; c.textAlign = 'center';
+    c.fillStyle = '#68d391'; c.fillText('A 👂', w - 30, sy - 14); c.fillRect(w - 34, sy - 6, 8, 12);
+    c.fillStyle = '#b794f4'; c.fillText('👂 B', 30, sy - 14); c.fillRect(26, sy - 6, 8, 12);
+    c.fillStyle = '#9aa6c8'; c.font = '11px system-ui'; c.fillText('sumber 500 Hz', sx, sy + 26);
+    $('#fa').textContent = fmt(500 / (1 - ratio), 0) + ' Hz'; $('#fbb').textContent = fmt(500 / (1 + ratio), 0) + ' Hz';
+    $('#lr').textContent = `${fmt(1 - ratio, 2)} : ${fmt(1 + ratio, 2)}`;
+  });
+}
+
+/* ================= MISI 7 : TANTANGAN AKHIR ================= */
+function m7(root) {
+  const Q = [
+    ['f1', 'Kelompok lain memakai nada 1500 Hz dan mendapat L₁ = 5,1 cm, L₂ = 16,5 cm. Panjang gelombangnya adalah …', ['0,114 m', '0,228 m', '0,204 m', '0,660 m'], 1, 'λ = 2(16,5 − 5,1) = 22,8 cm = 0,228 m.'],
+    ['f2', 'Dari data soal sebelumnya, cepat rambat bunyi yang diperoleh ≈ …', ['171 m/s', '342 m/s', '660 m/s', '1500 m/s'], 1, 'v = λf = 0,228 × 1500 = 342 m/s — sama dengan hasil kalian. Medium sama, v sama.'],
+    ['f3', 'Di udara yang sama, frekuensi nada dijadikan dua kali lipat. Maka …', ['λ menjadi 2×, v menjadi 2×', 'λ menjadi ½×, v tetap', 'λ tetap, v menjadi 2×', 'λ menjadi ½×, v menjadi ½×'], 1, 'v ditentukan medium (tetap), sehingga λ = v/f menjadi setengahnya.'],
+    ['f4', 'Data kelompok: v pada 800, 1000, 1200 Hz adalah 341, 344, dan 342 m/s. Kesimpulan yang paling didukung data adalah …', ['Frekuensi tinggi membuat bunyi lebih cepat', 'Cepat rambat bunyi relatif tetap, tidak bergantung frekuensi', 'Frekuensi 1000 Hz paling cepat', 'Datanya salah karena tidak persis sama'], 1, 'Perbedaan 1–3 m/s adalah ketidakpastian pengukuran, bukan pola.'],
+    ['f5', 'Ambulans membunyikan sirene 680 Hz dan bergerak 20 m/s mendekati pengamat diam (v = 340 m/s). Frekuensi yang didengar pengamat ≈ …', ['640 Hz', '680 Hz', '722,5 Hz', '760 Hz'], 2, "f' = 680 × 340 / (340 − 20) = 722,5 Hz."],
+    ['f6', 'Ponsel 4000 Hz dibawa berjalan, ponsel perekam mencatat 4020 Hz saat mendekat. Kecepatan berjalan siswa ≈ …', ['0,5 m/s', '1,7 m/s', '3,4 m/s', '20 m/s'], 1, 'vₛ ≈ v × Δf / f = 343 × 20 / 4000 ≈ 1,7 m/s.'],
+    ['f7', 'Setelah ambulans lewat dan menjauh, frekuensi sirene yang didengar SOPIR ambulans …', ['Naik', 'Turun', 'Tetap 680 Hz'], 2, 'Sopir bergerak bersama sumber — tidak ada gerak relatif, jadi tidak ada pergeseran Doppler.'],
+    ['f8', 'Dina berkata, "Efek Doppler artinya bunyi makin keras saat sumber mendekat." Tanggapan yang tepat adalah …', ['Benar, itulah definisi efek Doppler', 'Kurang tepat: makin keras karena jarak makin dekat (amplitudo); efek Doppler adalah perubahan frekuensi terukur akibat gerak relatif', 'Benar, karena frekuensi sama dengan kenyaringan'], 1, 'Uji "sumber diam" di Misi 5 membuktikannya: kenyaringan berubah, frekuensi tidak.'],
+  ];
+  root.innerHTML = `<div class="card story"><div class="tag">🏆 Arena Tantangan</div>
+    <p>Saatnya menguji kemampuan <b>analisis data</b> dan <b>penjelasan efek Doppler</b>. Setiap soal hanya bisa dijawab <b>satu kali</b>. +30 XP per jawaban benar.</p>
+    <div class="big" id="score"></div></div>
+    <div class="card">${Q.map(q => mcq(q[0], q[1], q[2], q[3], q[4], '', { lock: true, xp: 30, onAns: upd })).join('')}</div>`;
+  function upd() {
+    const n = Q.filter(q => S.ans[q[0]] != null).length, b = Q.filter(q => qOk(q[0])).length;
+    $('#score').textContent = `Skor: ${b} / ${Q.length}` + (n < Q.length ? `  ·  ${Q.length - n} soal tersisa` : '');
+    S.m7score = [b, Q.length]; save();
+    if (n === Q.length) complete(7);
+  }
+  upd();
+}
+
+/* ================= MISI 8 : LAPORAN ================= */
+function reportHTML() {
+  const G = S.group, P = S.pred, D3 = S.m3.data, D5 = S.m5;
+  const lamE = f => D3[f].L1 != null && D3[f].L2 != null ? 2 * (D3[f].L2 - D3[f].L1) / 100 : null;
+  const roles = ['Operator ponsel', 'Pengukur kolom udara', 'Pencatat data', 'Penyaji'];
+  const ansTxt = k => { const Q = MCQ[k]; return S.ans[k] == null ? '–' : (qOk(k) ? '✔ benar' : '✘ belum tepat'); };
+  const lamMap = { naik: 'membesar', turun: 'mengecil', tetap: 'tetap' }, vMap = { naik: 'makin cepat', turun: 'makin lambat', tetap: 'tetap' };
+  const dopMap = { naik: 'frekuensi naik', keras: 'hanya makin keras', turun: 'frekuensi turun', tetap: 'tidak berubah' };
+  return `<div class="report">
+  <h3>Laporan Investigasi Gelombang Bunyi</h3>
+  <p><b>Kelompok:</b> ${esc(G.name) || '–'}<br>${roles.map((r, i) => `${r}: ${esc(G.r[i]) || '–'}`).join(' · ')}<br><span class="sub">Dibuat: ${new Date().toLocaleString('id-ID')} · ${S.xp} XP</span></p>
+  <h4>1. Prediksi awal</h4>
+  <p>λ akan <b>${lamMap[P.lam] || '–'}</b>, v akan <b>${vMap[P.v] || '–'}</b>; Doppler: <b>${dopMap[P.dop] || '–'}</b>.<br>Alasan: <i>${esc(P.text) || '–'}</i></p>
+  <h4>2. Bagian A – Data resonansi</h4>
+  <div class="tablewrap"><table><thead><tr><th>f (Hz)</th><th>L₁ (cm)</th><th>L₂ (cm)</th><th>λ = 2(L₂−L₁) (m)</th><th>v = λf (m/s)</th></tr></thead><tbody>
+  ${FREQS.map(f => `<tr><td>${f}</td><td>${fmt(D3[f].L1)}</td><td>${fmt(D3[f].L2)}</td><td>${fmt(lamE(f), 3)}</td><td>${lamE(f) ? fmt(lamE(f) * f, 0) : '–'}</td></tr>`).join('')}
+  </tbody></table></div>
+  <p><b>Kesimpulan:</b> Ketika f membesar, λ mengecil, sedangkan v relatif tetap (≈ 343 m/s). Cepat rambat bunyi ditentukan oleh medium, bukan oleh frekuensi. Metode λ = 2(L₂ − L₁) menghilangkan koreksi ujung pipa.<br>
+  <span class="sub">Analisis: λ vs f ${ansTxt('m4a')} · v vs f ${ansTxt('m4b')} · faktor penentu v ${ansTxt('m4c')} · koreksi ujung ${ansTxt('m4d')}</span></p>
+  <h4>3. Bagian B – Efek Doppler</h4>
+  <p>Sumber 4000 Hz, vₛ = ${D5.last ? fmt(D5.last.vs, 1) : '–'} m/s. Prediksi rumus Δf = ${esc(D5.pred) || '–'} Hz.<br>
+  Terukur: mendekat <b>${esc(D5.fN) || '–'} Hz</b>, menjauh <b>${esc(D5.fF) || '–'} Hz</b>.
+  ${D5.measOk ? ` Rata-rata |Δf| = ${fmt((num(D5.fN) - num(D5.fF)) / 2, 1)} Hz vs prediksi ${fmt(4000 * D5.last.vs / V, 1)} Hz.` : ''}<br>
+  Uji sumber diam: ${ansTxt('m5q')} (jarak mengubah kenyaringan, bukan frekuensi).</p>
+  <h4>4. Penjelasan (diagram muka gelombang)</h4>
+  <p>Apakah frekuensi sumber berubah? <b>Tidak</b> (${ansTxt('m6a')}).<br>Mengapa frekuensi terukur berubah? Muka gelombang di depan sumber merapat (λ pendek) sehingga lebih banyak muka gelombang tiba per detik; di belakang merenggang (${ansTxt('m6b')}).<br>
+  Penjelasan kelompok: <i>${esc(S.m6.text) || '–'}</i></p>
+  <h4>5. Tantangan akhir</h4>
+  <p>Skor: <b>${S.m7score ? S.m7score[0] + ' / ' + S.m7score[1] : '–'}</b></p>
+  <h4>6. Refleksi: prediksi vs data</h4>
+  <p>Prediksi λ ${P.lam === 'turun' ? 'sesuai' : 'terbantah'} data · prediksi v ${P.v === 'tetap' ? 'sesuai' : 'terbantah'} data · prediksi Doppler ${P.dop === 'naik' ? 'sesuai' : 'terbantah'} data.</p>
+  <p class="sub">Lencana: ${BADGES.filter((b, i) => S.done[i + 1]).join(' ') || '–'}</p></div>`;
+}
+function m8(root) {
+  // pastikan registri MCQ terisi untuk status jawaban
+  ['m4a', 'm4b', 'm4c', 'm4d'].forEach(k => MCQ[k] = MCQ[k] || { ans: { m4a: 1, m4b: 2, m4c: 1, m4d: 1 }[k] });
+  MCQ.m5q = MCQ.m5q || { ans: 1 }; ['m6a', 'm6b', 'm6c'].forEach(k => MCQ[k] = MCQ[k] || { ans: { m6a: 1, m6b: 0, m6c: 1 }[k] });
+  root.innerHTML = `<div class="card story"><div class="tag">📜 Produk Kelompok</div>
+    <p>Tabel data, kesimpulan, dan jawaban analisis kalian terkumpul otomatis. Periksa, lalu <b>cetak/simpan PDF</b> atau <b>unduh</b> sebagai bukti belajar kelompok. Penyaji kelompok mempresentasikannya di depan kelas.</p></div>
+    <div class="card" id="rep">${reportHTML()}</div>
+    <div class="card noprint"><div class="row"><button class="btn" id="pr">🖨️ Cetak / Simpan PDF</button><button class="btn alt" id="dl">⬇️ Unduh laporan (.html)</button><button class="btn warn" id="fin">✅ Kumpulkan laporan</button></div>
+    <p class="note">Laporan tersimpan di perangkat ini saja (tanpa internet). Unduh atau cetak sebelum menutup halaman jika perangkat dipakai bergantian.</p></div>`;
+  $('#pr').onclick = () => window.print();
+  $('#dl').onclick = () => {
+    const css = `body{font-family:system-ui,sans-serif;max-width:800px;margin:24px auto;padding:0 16px;color:#111;line-height:1.5}table{border-collapse:collapse;width:100%}th,td{border:1px solid #999;padding:6px;text-align:center}h4{margin:16px 0 4px}.sub{color:#555;font-size:.9em}`;
+    const blob = new Blob([`<!doctype html><html lang="id"><head><meta charset="utf-8"><title>Laporan ${esc(S.group.name)}</title><style>${css}</style></head><body>${reportHTML()}</body></html>`], { type: 'text/html' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'laporan-' + (S.group.name || 'kelompok').replace(/[^\w-]+/g, '-') + '.html'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  };
+  $('#fin').onclick = () => { complete(8); };
+}
+
+/* ================= INIT ================= */
+$('#vol').oninput = e => { vol = +e.target.value; setMaster(); };
+$('#mute').onclick = () => { muted = !muted; $('#mute').textContent = muted ? '🔈 Suara' : '🔇 Bisu'; setMaster(); };
+$('#teacher').onclick = () => {
+  if (!S.teacher && !confirm('Mode Guru membuka semua misi (untuk demonstrasi kelas / rencana cadangan). Aktifkan?')) return;
+  S.teacher = !S.teacher; save(); hud(); renderMap(); refreshNav(); toast(S.teacher ? '👩‍🏫 Mode Guru aktif: semua misi terbuka' : 'Mode Guru nonaktif');
+};
+$('#reset').onclick = () => { if (!confirm('Hapus semua progres kelompok di perangkat ini?')) return; runCleanup(); S = blank(); save(); hud(); openMission(1); };
+$('#modal').onclick = e => { if (e.target.id === 'modal') closeModal(); };
+hud(); openMission(unlocked(S.cur) ? S.cur : 1);
+</script>
+</body>
+</html>
